@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.talento.crud_talento.dtos.ProductoDTO;
+import com.talento.crud_talento.excepcion.ProductoDuplicadoException;
+import com.talento.crud_talento.excepcion.RecursoNoEncontradoExcepcion;
 import com.talento.crud_talento.mapper.ProductoMapper;
 import com.talento.crud_talento.modelo.Producto;
 import com.talento.crud_talento.repositorio.ProductoRepositorio;
@@ -39,19 +41,35 @@ public class ProductoServicio implements IProductoServicio{
 
 	@Override
 	public ProductoDTO registrarProducto(ProductoDTO productoDTO){
+
 		if (productoDTO.getPrecio() < 0) {
 			throw new IllegalArgumentException("El precio no puede ser negativo");
 		}
+
+		if (productoRepositorio.existsByNombre(productoDTO.getNombre())) {
+        	throw new ProductoDuplicadoException("El producto ya existe");
+    	}
+
 		Producto producto = productoMapper.toEntity(productoDTO);
 		Producto productoGuardado = productoRepositorio.save(producto);
+
 		return productoMapper.toDTO(productoGuardado);
 	}
 
 	@Override
 	public ProductoDTO actualizarProducto(Long idProducto, ProductoDTO productoDTO) {
 
+		if (productoDTO.getPrecio() < 0) {
+			throw new IllegalArgumentException("El precio no puede ser negativo");
+		}
+
 		Producto productoExistente = productoRepositorio.findById(idProducto)
-				.orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+				.orElseThrow(() -> new RecursoNoEncontradoExcepcion("Producto no encontrado"));
+
+		if (!productoExistente.getNombre().equals(productoDTO.getNombre())
+				&& productoRepositorio.existsByNombre(productoDTO.getNombre())) {
+			throw new ProductoDuplicadoException("El producto ya existe");
+		}
 
 		productoMapper.toEntity(productoDTO, productoExistente);
 

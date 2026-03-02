@@ -60,7 +60,7 @@ public class ProductoControlador {
     return ResponseEntity.ok(productoDTO);
 }
 
-	@PostMapping("/productos")
+	@PostMapping("/registrar-productos")
 	public ResponseEntity<ProductoDTO> registrarProducto(
 			@RequestBody ProductoDTO productoDTO
 	){
